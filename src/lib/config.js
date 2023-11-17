@@ -13,7 +13,7 @@ export let environment = {
 };
 
 // export const localhost = 'int.sh.intel.com:5173';
-export const localhost = '10.239.115.52:5173';
+export const localhost = '192.168.177.226:5173';
 
 export const corsSites = [
   'ibelem.github.io',
@@ -54,7 +54,37 @@ export const uniqueBackends = [
   'webnn_npu'
 ];
 
+function generateEsrganConfigs() {
+  let ret = []
+  const configs = [
+    // tile size, float bits, est. VRAM requirement
+    [ 128, 32,  2],
+    [ 128, 16,  2],
+    [ 256, 32,  4],
+    [ 256, 16,  4],
+    [ 512, 32,  8],
+    [ 512, 16,  8],
+    [1024, 32, 16],
+    [1024, 16, 16],
+  ]
+  return configs.map(([tile, fp, vram]) => ({
+    category: 'Image Super-Resolution',
+    id: `realesrgan_x4_${tile}_fp${fp}`,
+    name: `RealESRGAN x4 ${tile} fp${fp}`,
+    description: `Image Super-Resolution x4, tile size = ${tile}, recommended VRAM >${vram} GB`,
+    note: '',
+    source: `RealESRGAN_x4plus_fp${fp}_t${tile}_torchscript.onnx`,
+    model: `RealESRGAN_x4plus_fp${fp}_t${tile}_torchscript.onnx`,
+    size: fp == 16 ? "36 MB" : '65 MB',
+    format: 'onnx',
+    datatype: `fp${fp}`,
+    inputs: [{ [`in_image_float${fp}_rgb01`]: [`float${fp}`, 'random', [1, 3, tile, tile], { "batch_size": 1 }] }],
+    inputstip: `[1, 3, ${tile}, ${tile}]`
+  }))
+}
+
 export let models = [
+  ...generateEsrganConfigs(),
   {
     category: 'Model Access Check',
     id: 'model_access_check',
